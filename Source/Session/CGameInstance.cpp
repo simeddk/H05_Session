@@ -1,6 +1,7 @@
 #include "CGameInstance.h"
 #include "Global.h"
 #include "Blueprint/UserWidget.h"
+#include "Widgets/CMainMenu.h"
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& InObject)
 {
@@ -16,7 +17,8 @@ void UCGameInstance::Init()
 
 void UCGameInstance::Host()
 {
-	CLog::Print("Host");
+	if (!!MainMenu)
+		MainMenu->SetPlayMode();
 
 	UWorld* world = GetWorld();
 	CheckNull(world);
@@ -28,6 +30,9 @@ void UCGameInstance::Join(const FString& InAddress)
 {
 	CLog::Print("Join to " + InAddress);
 
+	if (!!MainMenu)
+		MainMenu->SetPlayMode();
+
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
 
@@ -38,18 +43,9 @@ void UCGameInstance::LoadMainMenu()
 {
 	CheckNull(MainMenuWidgetClass);
 
-	UUserWidget* mainMenu = CreateWidget(this, MainMenuWidgetClass);
-	CheckNull(mainMenu);
+	MainMenu = CreateWidget<UCMainMenu>(this, MainMenuWidgetClass);
+	CheckNull(MainMenu);
 
-	mainMenu->AddToViewport();
-
-	mainMenu->bIsFocusable = true;
-
-	FInputModeUIOnly inputMode;
-	inputMode.SetWidgetToFocus(mainMenu->TakeWidget());
-	inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-	APlayerController* playerController = GetFirstLocalPlayerController();
-	playerController->SetInputMode(inputMode);
-	playerController->bShowMouseCursor = true;
+	MainMenu->SetOwingGameInstance(this);
+	MainMenu->SetUIMode();
 }
