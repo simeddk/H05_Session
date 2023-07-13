@@ -3,6 +3,12 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableTextBox.h"
+#include "CSessionRow.h"
+
+UCMainMenu::UCMainMenu()
+{
+	CHelpers::GetClass(&SessionRowWidgetClass, "/Game/Widgets/WB_SessionRow");
+}
 
 bool UCMainMenu::Initialize()
 {
@@ -21,48 +27,10 @@ bool UCMainMenu::Initialize()
 	CheckNullResult(ConfirmJoinMenuButton, false);
 	ConfirmJoinMenuButton->OnClicked.AddDynamic(this, &UCMainMenu::JoinServer);
 
+	CheckNullResult(QuitButton, false);
+	QuitButton->OnClicked.AddDynamic(this, &UCMainMenu::QuitGame);
+
 	return true;
-}
-
-void UCMainMenu::SetOwingGameInstance(IIMenuInterface* InOwingInstance)
-{
-	OwingGameInstance = InOwingInstance;
-}
-
-void UCMainMenu::SetUIMode()
-{
-	AddToViewport();
-	bIsFocusable = true;
-
-	FInputModeUIOnly inputMode;
-	inputMode.SetWidgetToFocus(TakeWidget());
-	inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-
-	UWorld* world = GetWorld();
-	CheckNull(world);
-
-	APlayerController* playerController = world->GetFirstPlayerController();
-	CheckNull(playerController);
-
-	playerController->SetInputMode(inputMode);
-	playerController->bShowMouseCursor = true;
-}
-
-void UCMainMenu::SetPlayMode()
-{
-	RemoveFromViewport();
-	bIsFocusable = false;
-
-	FInputModeGameOnly inputMode;
-
-	UWorld* world = GetWorld();
-	CheckNull(world);
-
-	APlayerController* playerController = world->GetFirstPlayerController();
-	CheckNull(playerController);
-
-	playerController->SetInputMode(inputMode);
-	playerController->bShowMouseCursor = false;
 }
 
 void UCMainMenu::HostServer()
@@ -75,10 +43,18 @@ void UCMainMenu::HostServer()
 void UCMainMenu::JoinServer()
 {
 	CheckNull(OwingGameInstance);
-	CheckNull(IPAddressField);
+	/*CheckNull(IPAddressField);
 
 	const FString& address = IPAddressField->GetText().ToString();
-	OwingGameInstance->Join(address);
+	OwingGameInstance->Join(address);*/
+
+	UWorld* world = GetWorld();
+	CheckNull(world);
+
+	UCSessionRow* row = CreateWidget<UCSessionRow>(world,SessionRowWidgetClass);
+	CheckNull(row);
+
+	SessionList->AddChild(row);
 }
 
 void UCMainMenu::OpenJoinMenu()
@@ -95,4 +71,15 @@ void UCMainMenu::OpenMainMenu()
 	CheckNull(MainMenu);
 
 	MenuSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UCMainMenu::QuitGame()
+{
+	UWorld* world = GetWorld();
+	CheckNull(world);
+
+	APlayerController* controller = world->GetFirstPlayerController();
+	CheckNull(controller);
+
+	controller->ConsoleCommand("quit");
 }

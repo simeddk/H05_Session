@@ -1,35 +1,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
-#include "Widgets/IMenuInterface.h"
+#include "CMenuBase.h"
 #include "CMainMenu.generated.h"
 
 UCLASS()
-class SESSION_API UCMainMenu : public UUserWidget
+class SESSION_API UCMainMenu : public UCMenuBase
 {
 	GENERATED_BODY()
 
 public:
-	void SetOwingGameInstance(IIMenuInterface* InOwingInstance);
-	void SetUIMode();
-	void SetPlayMode();
+	UCMainMenu();
 
 protected:
 	virtual bool Initialize() override;
 
 private:
-	UFUNCTION()
-		void HostServer();
-
-	UFUNCTION()
-		void JoinServer();
-
-	UFUNCTION()
-		void OpenJoinMenu();
-
-	UFUNCTION()
-		void OpenMainMenu();
+	UFUNCTION()	void HostServer();
+	UFUNCTION()	void JoinServer();
+	UFUNCTION()	void OpenJoinMenu();
+	UFUNCTION()	void OpenMainMenu();
+	UFUNCTION()	void QuitGame();
 
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -45,6 +36,9 @@ private:
 		class UButton* ConfirmJoinMenuButton;
 
 	UPROPERTY(meta = (BindWidget))
+		class UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidget))
 		class UWidgetSwitcher* MenuSwitcher;
 
 	UPROPERTY(meta = (BindWidget))
@@ -54,8 +48,9 @@ private:
 		class UWidget* JoinMenu;
 
 	UPROPERTY(meta = (BindWidget))
-		class UEditableTextBox* IPAddressField;
+		class UPanelWidget* SessionList;
 
 private:
-	IIMenuInterface* OwingGameInstance;
+	TSubclassOf<class UCSessionRow> SessionRowWidgetClass;
+
 };

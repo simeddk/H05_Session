@@ -15,7 +15,8 @@ public class Session : ModuleRules
 			"Engine",
 			"InputCore",
 			"HeadMountedDisplay",
-			"UMG"
+			"UMG",
+			"OnlineSubsystem"
 		});
 		
 		
