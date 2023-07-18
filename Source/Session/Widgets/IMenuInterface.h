@@ -19,4 +19,6 @@ public:
 	virtual void Join(const FString& InAddress) = 0;
 
 	virtual void ReturnToMainMenu() = 0;
+	
+	virtual void RefreshSessionList() = 0;
 };

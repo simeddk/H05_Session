@@ -15,6 +15,9 @@ public:
 protected:
 	virtual bool Initialize() override;
 
+public:
+	void SetSessionList(TArray<FString> InSessionNames);
+
 private:
 	UFUNCTION()	void HostServer();
 	UFUNCTION()	void JoinServer();

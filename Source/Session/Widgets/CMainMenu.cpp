@@ -3,6 +3,7 @@
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableTextBox.h"
+#include "Components/TextBlock.h"
 #include "CSessionRow.h"
 
 UCMainMenu::UCMainMenu()
@@ -42,19 +43,27 @@ void UCMainMenu::HostServer()
 
 void UCMainMenu::JoinServer()
 {
-	CheckNull(OwingGameInstance);
-	/*CheckNull(IPAddressField);
+	OwingGameInstance->Join("");
+}
 
-	const FString& address = IPAddressField->GetText().ToString();
-	OwingGameInstance->Join(address);*/
 
+void UCMainMenu::SetSessionList(TArray<FString> InSessionNames)
+{
 	UWorld* world = GetWorld();
 	CheckNull(world);
 
-	UCSessionRow* row = CreateWidget<UCSessionRow>(world,SessionRowWidgetClass);
-	CheckNull(row);
+	SessionList->ClearChildren();
 
-	SessionList->AddChild(row);
+	for (const FString& sessionName : InSessionNames)
+	{
+		UCSessionRow* row = CreateWidget<UCSessionRow>(world, SessionRowWidgetClass);
+		CheckNull(row);
+
+		row->SessionName->SetText(FText::FromString(sessionName));
+
+		SessionList->AddChild(row);
+	}
+
 }
 
 void UCMainMenu::OpenJoinMenu()
@@ -63,6 +72,9 @@ void UCMainMenu::OpenJoinMenu()
 	CheckNull(JoinMenu);
 
 	MenuSwitcher->SetActiveWidget(JoinMenu);
+
+	if (!!OwingGameInstance)
+		OwingGameInstance->RefreshSessionList();
 }
 
 void UCMainMenu::OpenMainMenu()

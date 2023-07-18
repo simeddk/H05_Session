@@ -32,16 +32,6 @@ void UCGameInstance::Init()
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnCreateSessionComplete);
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnDestroySessionComplete);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCGameInstance::OnFindSessionComplete);
-
-			//Find Session
-			SessionSearch = MakeShareable(new FOnlineSessionSearch());
-			if (SessionSearch.IsValid())
-			{
-				CLog::Log("Starting Find Sessions");
-
-				SessionSearch->bIsLanQuery = true;
-				SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
-			}
 		}
 	}
 	else
@@ -83,7 +73,7 @@ void UCGameInstance::CreateSession()
 
 void UCGameInstance::Join(const FString& InAddress)
 {
-	CLog::Print("Join to " + InAddress);
+	/*CLog::Print("Join to " + InAddress);
 
 	if (!!MainMenu)
 		MainMenu->SetPlayMode();
@@ -91,7 +81,9 @@ void UCGameInstance::Join(const FString& InAddress)
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
 
-	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);
+	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);*/
+
+	MainMenu->SetSessionList({"Session1", "Session2"});
 }
 
 void UCGameInstance::LoadMainMenu()
@@ -124,6 +116,19 @@ void UCGameInstance::ReturnToMainMenu()
 	controller->ClientTravel("/Game/Maps/MainMenu", ETravelType::TRAVEL_Absolute);
 }
 
+void UCGameInstance::RefreshSessionList()
+{
+	//Find Session
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	if (SessionSearch.IsValid())
+	{
+		CLog::Log("Starting Find Sessions");
+
+		SessionSearch->bIsLanQuery = true;
+		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	}
+}
+
 void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess)
 {
 	//세션이 정상적으로 생성되었는지 체크
@@ -151,21 +156,21 @@ void UCGameInstance::OnDestroySessionComplete(FName InSessionName, bool InSucces
 
 void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 {
-	if (InSuccess == true && SessionSearch.IsValid())
+	if (InSuccess == true && SessionSearch.IsValid() && MainMenu != nullptr)
 	{
 		CLog::Log("Finished Find Sessions");
 
+		TArray<FString> sessionNames;
 		for (const auto& searchResult : SessionSearch->SearchResults)
 		{
-			CLog::Log("==============================");
-			CLog::Log(searchResult.GetSessionIdStr());
-			CLog::Log(searchResult.PingInMs);
-			CLog::Log("==============================");
-		}
-	}
+			CLog::Log("==<Find Session Result>==");
+			CLog::Log(" -> SessionID : " + searchResult.GetSessionIdStr());
+			CLog::Log(" -> Ping : " +  FString::FromInt(searchResult.PingInMs));
 
-	//TODO.
-	//1. SessionSearch 얻은 정보(세션 검색 결과)를 -> SessionRow에게 전달
-	//2. Join 메뉴로 들어올 때마다 SessionList(ScrollBox)를 새로고침
+			sessionNames.Add(searchResult.GetSessionIdStr());
+		}
+
+		MainMenu->SetSessionList(sessionNames);
+	}
 	
 }

@@ -9,4 +9,7 @@ class SESSION_API UCSessionRow : public UUserWidget
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(meta = (BindWidget))
+		class UTextBlock* SessionName;
 };

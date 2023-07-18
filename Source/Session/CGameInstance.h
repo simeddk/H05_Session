@@ -29,6 +29,7 @@ public:
 		void LoadGameMenu();
 
 	void ReturnToMainMenu() override;
+	void RefreshSessionList() override;
 
 private:
 	void OnCreateSessionComplete(FName InSessionName, bool InSuccess);
