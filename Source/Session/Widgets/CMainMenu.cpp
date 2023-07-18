@@ -43,7 +43,17 @@ void UCMainMenu::HostServer()
 
 void UCMainMenu::JoinServer()
 {
-	OwingGameInstance->Join("");
+	if (!!OwingGameInstance && SessionRowIndex.IsSet())
+	{
+		CLog::Log("Session Row Index : " + SessionRowIndex.GetValue());
+
+		OwingGameInstance->Join(SessionRowIndex.GetValue());
+	}
+	else
+	{
+		CLog::Log("Session Row Index is not set!!");
+	}
+	
 }
 
 
@@ -54,16 +64,23 @@ void UCMainMenu::SetSessionList(TArray<FString> InSessionNames)
 
 	SessionList->ClearChildren();
 
+	uint32 i = 0;
 	for (const FString& sessionName : InSessionNames)
 	{
 		UCSessionRow* row = CreateWidget<UCSessionRow>(world, SessionRowWidgetClass);
 		CheckNull(row);
 
 		row->SessionName->SetText(FText::FromString(sessionName));
+		row->Setup(this, i++);
 
 		SessionList->AddChild(row);
 	}
 
+}
+
+void UCMainMenu::SetSessionRowIndex(uint32 InIndex)
+{
+	SessionRowIndex = InIndex;
 }
 
 void UCMainMenu::OpenJoinMenu()

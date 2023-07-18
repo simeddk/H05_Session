@@ -1,7 +1,6 @@
 #include "CGameInstance.h"
 #include "Global.h"
 #include "Blueprint/UserWidget.h"
-#include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
 #include "Widgets/CMainMenu.h"
 #include "Widgets/CMenuBase.h"
@@ -32,6 +31,7 @@ void UCGameInstance::Init()
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnCreateSessionComplete);
 			SessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnDestroySessionComplete);
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UCGameInstance::OnFindSessionComplete);
+			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UCGameInstance::OnJoinSessionComplete);
 		}
 	}
 	else
@@ -71,19 +71,15 @@ void UCGameInstance::CreateSession()
 	}
 }
 
-void UCGameInstance::Join(const FString& InAddress)
+void UCGameInstance::Join(uint32 InIndex)
 {
-	/*CLog::Print("Join to " + InAddress);
+	CheckFalse(SessionInterface.IsValid());
+	CheckFalse(SessionSearch.IsValid());
 
 	if (!!MainMenu)
 		MainMenu->SetPlayMode();
 
-	APlayerController* controller = GetFirstLocalPlayerController();
-	CheckNull(controller);
-
-	controller->ClientTravel(InAddress, ETravelType::TRAVEL_Absolute);*/
-
-	MainMenu->SetSessionList({"Session1", "Session2"});
+	SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[InIndex]);
 }
 
 void UCGameInstance::LoadMainMenu()
@@ -171,6 +167,25 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 		}
 
 		MainMenu->SetSessionList(sessionNames);
+
 	}
 	
+}
+
+void UCGameInstance::OnJoinSessionComplete(FName InSessionName, EOnJoinSessionCompleteResult::Type InResult)
+{
+	CheckFalse(SessionInterface.IsValid());
+
+	FString address;
+	if (SessionInterface->GetResolvedConnectString(SESSION_NAME, address) == false)
+	{
+		CLog::Log("Could not get IP Address");
+		return;
+	}
+
+	CLog::Print("Join to " + address);
+
+	APlayerController* controller = GetFirstLocalPlayerController();
+	CheckNull(controller);
+	controller->ClientTravel(address, ETravelType::TRAVEL_Absolute);
 }

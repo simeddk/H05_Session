@@ -17,6 +17,7 @@ protected:
 
 public:
 	void SetSessionList(TArray<FString> InSessionNames);
+	void SetSessionRowIndex(uint32 InIndex);
 
 private:
 	UFUNCTION()	void HostServer();
@@ -56,4 +57,5 @@ private:
 private:
 	TSubclassOf<class UCSessionRow> SessionRowWidgetClass;
 
+	TOptional<uint32> SessionRowIndex;
 };
