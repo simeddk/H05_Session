@@ -5,7 +5,7 @@
 #include "Widgets/CMainMenu.h"
 #include "Widgets/CMenuBase.h"
 
-const static FName SESSION_NAME = TEXT("MySession");
+const static FName SESSION_NAME = TEXT("GameSession");
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& InObject)
 {
@@ -63,9 +63,19 @@ void UCGameInstance::CreateSession()
 	if (SessionInterface.IsValid())
 	{
 		FOnlineSessionSettings sessionSettings;
-		sessionSettings.bIsLANMatch = true;
-		sessionSettings.NumPublicConnections = 5;
+
+		if (IOnlineSubsystem::Get()->GetSubsystemName() == "NULL")
+		{
+			sessionSettings.bIsLANMatch = true;
+		}
+		else
+		{
+			sessionSettings.bIsLANMatch = false;
+		}
+
+		sessionSettings.NumPublicConnections = 4;
 		sessionSettings.bShouldAdvertise = true;
+		sessionSettings.bUsesPresence = true;
 
 		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 	}
@@ -120,7 +130,10 @@ void UCGameInstance::RefreshSessionList()
 	{
 		CLog::Log("Starting Find Sessions");
 
-		SessionSearch->bIsLanQuery = true;
+		//SessionSearch->bIsLanQuery = true;
+		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
 }
@@ -156,17 +169,24 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 	{
 		CLog::Log("Finished Find Sessions");
 
-		TArray<FString> sessionNames;
+		TArray<FSessionData> sessionDatas;
+
 		for (const auto& searchResult : SessionSearch->SearchResults)
 		{
 			CLog::Log("==<Find Session Result>==");
 			CLog::Log(" -> SessionID : " + searchResult.GetSessionIdStr());
 			CLog::Log(" -> Ping : " +  FString::FromInt(searchResult.PingInMs));
 
-			sessionNames.Add(searchResult.GetSessionIdStr());
+			FSessionData data;
+			data.Name = searchResult.GetSessionIdStr();
+			data.MaxPlayers = searchResult.Session.SessionSettings.NumPublicConnections;
+			data.CurrentPlayers = data.MaxPlayers - searchResult.Session.NumOpenPublicConnections;
+			data.HostUserName = searchResult.Session.OwningUserName;
+
+			sessionDatas.Add(data);
 		}
 
-		MainMenu->SetSessionList(sessionNames);
+		MainMenu->SetSessionList(sessionDatas);
 
 	}
 	

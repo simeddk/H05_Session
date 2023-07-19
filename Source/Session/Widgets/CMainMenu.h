@@ -4,6 +4,19 @@
 #include "CMenuBase.h"
 #include "CMainMenu.generated.h"
 
+USTRUCT()
+struct FSessionData
+{
+	GENERATED_BODY()
+
+public:
+	FString Name;
+	uint16 CurrentPlayers;
+	uint16 MaxPlayers;
+	FString HostUserName;
+};
+
+
 UCLASS()
 class SESSION_API UCMainMenu : public UCMenuBase
 {
@@ -16,7 +29,7 @@ protected:
 	virtual bool Initialize() override;
 
 public:
-	void SetSessionList(TArray<FString> InSessionNames);
+	void SetSessionList(TArray<FSessionData> InSessionDatas);
 	void SetSessionRowIndex(uint32 InIndex);
 
 private:
@@ -25,6 +38,9 @@ private:
 	UFUNCTION()	void OpenJoinMenu();
 	UFUNCTION()	void OpenMainMenu();
 	UFUNCTION()	void QuitGame();
+
+private:
+	void SelectSessionRow();
 
 private:
 	UPROPERTY(meta = (BindWidget))
