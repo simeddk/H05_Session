@@ -18,7 +18,7 @@ public:
 
 public:
 	UFUNCTION(Exec)
-		void Host() override;
+		void Host(const FString& InSessionName) override;
 
 	UFUNCTION(Exec)
 		void Join(uint32 InIndex) override;
@@ -32,11 +32,14 @@ public:
 	void ReturnToMainMenu() override;
 	void RefreshSessionList() override;
 
+	void StartSession();
+
 private:
 	void OnCreateSessionComplete(FName InSessionName, bool InSuccess);
 	void OnDestroySessionComplete(FName InSessionName, bool InSuccess);
 	void OnFindSessionComplete(bool InSuccess);
 	void OnJoinSessionComplete(FName InSessionName, EOnJoinSessionCompleteResult::Type InResult);
+	void OnNetworkFailure(UWorld* InWorld, UNetDriver* InNetDriver, ENetworkFailure::Type InFaliureType, const FString& OutErrorMessge);
 
 	void CreateSession();
 
@@ -49,4 +52,5 @@ private:
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 
+	FString DesiredSessionName;
 };

@@ -17,7 +17,7 @@ bool UCMainMenu::Initialize()
 	CheckFalseResult(bSuccess, false);
 
 	CheckNullResult(HostButton, false);
-	HostButton->OnClicked.AddDynamic(this, &UCMainMenu::HostServer);
+	HostButton->OnClicked.AddDynamic(this, &UCMainMenu::OpenHostMenu);
 
 	CheckNullResult(JoinButton, false);
 	JoinButton->OnClicked.AddDynamic(this, &UCMainMenu::OpenJoinMenu);
@@ -27,6 +27,12 @@ bool UCMainMenu::Initialize()
 
 	CheckNullResult(ConfirmJoinMenuButton, false);
 	ConfirmJoinMenuButton->OnClicked.AddDynamic(this, &UCMainMenu::JoinServer);
+
+	CheckNullResult(CancelHostMenuButton, false);
+	CancelHostMenuButton->OnClicked.AddDynamic(this, &UCMainMenu::OpenMainMenu);
+
+	CheckNullResult(ConfirmHostMenuButton, false);
+	ConfirmHostMenuButton->OnClicked.AddDynamic(this, &UCMainMenu::HostServer);
 
 	CheckNullResult(QuitButton, false);
 	QuitButton->OnClicked.AddDynamic(this, &UCMainMenu::QuitGame);
@@ -38,7 +44,8 @@ void UCMainMenu::HostServer()
 {
 	CheckNull(OwingGameInstance);
 
-	OwingGameInstance->Host();
+	FString desiredSessionName = SessionNameField->GetText().ToString();
+	OwingGameInstance->Host(desiredSessionName);
 }
 
 void UCMainMenu::JoinServer()
@@ -118,6 +125,14 @@ void UCMainMenu::OpenMainMenu()
 	CheckNull(MainMenu);
 
 	MenuSwitcher->SetActiveWidget(MainMenu);
+}
+
+void UCMainMenu::OpenHostMenu()
+{
+	CheckNull(MenuSwitcher);
+	CheckNull(HostMenu);
+
+	MenuSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UCMainMenu::QuitGame()

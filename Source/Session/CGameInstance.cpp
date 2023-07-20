@@ -6,6 +6,7 @@
 #include "Widgets/CMenuBase.h"
 
 const static FName SESSION_NAME = TEXT("GameSession");
+const static FName SESSION_SETTINGS_KEY = TEXT("SessionSettingsKey");
 
 UCGameInstance::UCGameInstance(const FObjectInitializer& InObject)
 {
@@ -38,10 +39,15 @@ void UCGameInstance::Init()
 	{
 		CLog::Log("OSS Not Found");
 	}
+
+	if (!!GEngine)
+		GEngine->OnNetworkFailure().AddUObject(this, &UCGameInstance::OnNetworkFailure);
 }
 
-void UCGameInstance::Host()
+void UCGameInstance::Host(const FString& InSessionName)
 {
+	DesiredSessionName = InSessionName;
+
 	if (SessionInterface.IsValid())
 	{
 		//SessionName이 중복인 경우, 세션 삭제 -> 세션 재생성
@@ -76,6 +82,7 @@ void UCGameInstance::CreateSession()
 		sessionSettings.NumPublicConnections = 4;
 		sessionSettings.bShouldAdvertise = true;
 		sessionSettings.bUsesPresence = true;
+		sessionSettings.Set(SESSION_SETTINGS_KEY, DesiredSessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 		SessionInterface->CreateSession(0, SESSION_NAME, sessionSettings);
 	}
@@ -138,6 +145,12 @@ void UCGameInstance::RefreshSessionList()
 	}
 }
 
+void UCGameInstance::StartSession()
+{
+	if (SessionInterface.IsValid())
+		SessionInterface->StartSession(SESSION_NAME);
+}
+
 void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess)
 {
 	//세션이 정상적으로 생성되었는지 체크
@@ -147,14 +160,14 @@ void UCGameInstance::OnCreateSessionComplete(FName InSessionName, bool InSuccess
 		return;
 	}
 
-	//Play 맵으로 ServerTravel
+	//Lobby 맵으로 ServerTravel
 	if (!!MainMenu)
 		MainMenu->SetPlayMode();
 
 	UWorld* world = GetWorld();
 	CheckNull(world);
 
-	world->ServerTravel("/Game/Maps/Play?listen");
+	world->ServerTravel("/Game/Maps/Lobby?listen");
 }
 
 void UCGameInstance::OnDestroySessionComplete(FName InSessionName, bool InSuccess)
@@ -178,10 +191,19 @@ void UCGameInstance::OnFindSessionComplete(bool InSuccess)
 			CLog::Log(" -> Ping : " +  FString::FromInt(searchResult.PingInMs));
 
 			FSessionData data;
-			data.Name = searchResult.GetSessionIdStr();
 			data.MaxPlayers = searchResult.Session.SessionSettings.NumPublicConnections;
 			data.CurrentPlayers = data.MaxPlayers - searchResult.Session.NumOpenPublicConnections;
 			data.HostUserName = searchResult.Session.OwningUserName;
+
+			FString sessionName;
+			if (searchResult.Session.SessionSettings.Get(SESSION_SETTINGS_KEY, sessionName))
+			{
+				data.Name = sessionName;
+			}
+			else
+			{
+				CLog::Log("Session Settings Key is not found");
+			}
 
 			sessionDatas.Add(data);
 		}
@@ -208,4 +230,11 @@ void UCGameInstance::OnJoinSessionComplete(FName InSessionName, EOnJoinSessionCo
 	APlayerController* controller = GetFirstLocalPlayerController();
 	CheckNull(controller);
 	controller->ClientTravel(address, ETravelType::TRAVEL_Absolute);
+}
+
+void UCGameInstance::OnNetworkFailure(UWorld* InWorld, UNetDriver* InNetDriver, ENetworkFailure::Type InFaliureType, const FString& OutErrorMessge)
+{
+	CLog::Print(OutErrorMessge);
+
+	ReturnToMainMenu();
 }
